@@ -18,7 +18,7 @@ module "syncthing" {
 
   network_bridge      = "vmbr0"
   network_firewall    = true
-  ipv4_address        = "192.168.88.110/24"
-  gateway             = "192.168.88.1"
-  nameserver          = "192.168.88.1"
+  ipv4_address        = var.service_ips.syncthing
+  gateway             = var.gateway
+  nameserver          = var.nameserver
 }

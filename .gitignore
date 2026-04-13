@@ -10,3 +10,4 @@
 *.secrets.tfvars
 .secrets.tfvars
 .envrc
+secrets.auto.tfvars
