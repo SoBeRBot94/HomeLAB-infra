@@ -4,7 +4,7 @@ resource "proxmox_virtual_environment_vm" "this" {
   vm_id             = var.vm_id
   description       = var.description
   tags              = var.tags
-  start_on_boot     = local.on_boot
+  on_boot           = local.on_boot
   started           = local.started
   stop_on_destroy   = !local.agent_enabled
   bios              = local.bios
