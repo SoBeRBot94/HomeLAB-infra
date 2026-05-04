@@ -7,7 +7,7 @@ output "name" {
 }
 
 output "ipv4_addresses" {
-  value = proxmox_virtual_environment_vm.this.network_ipv4_addresses
+  value = proxmox_virtual_environment_vm.this.ipv4_addresses
 }
 
 output "mac_address" {
