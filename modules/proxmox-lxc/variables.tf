@@ -106,10 +106,10 @@ variable "nameservers" {
   default = []
 
   validation {
-    condition     = alltrue[(
+    condition     = alltrue([
       for ip in var.nameservers :
       can(regex("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$", ip))
-    )]
+    ])
     error_message = "Must be a valid list of IP address, e.g. 192.168.x.x"
   }
 }
