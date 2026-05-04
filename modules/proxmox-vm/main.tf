@@ -11,8 +11,8 @@ resource "proxmox_virtual_environment_vm" "this" {
   machine           = local.machine_type
 
   clone {
-    vm_id  = var.template_id
-    full          = local.full_clone_enabled
+    vm_id = var.template_id
+    full  = local.full_clone_enabled
   }
 
   agent {
