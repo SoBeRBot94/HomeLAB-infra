@@ -20,5 +20,5 @@ module "syncthing" {
   network_firewall    = true
   ipv4_address        = var.service_ips.syncthing
   gateway             = var.gateway
-  nameserver          = var.nameservers
+  nameservers          = var.nameservers
 }
