@@ -11,12 +11,12 @@ resource "proxmox_virtual_environment_vm" "this" {
   machine           = local.machine_type
 
   clone {
-    source_vm_id  = var.template_id
+    vm_id  = var.template_id
     full          = local.full_clone_enabled
   }
 
   agent {
-    enable = local.agent_enabled
+    enabled = local.agent_enabled
   }
 
   cpu {
@@ -38,17 +38,20 @@ resource "proxmox_virtual_environment_vm" "this" {
   }
 
   network_device {
-    bridge = var.network_bridge
+    bridge    = var.network_bridge
+    firewall  = var.network_firewall
   }
 
   initialization {
     ip_config {
-      address = var.ipv4_address
-      gateway = var.gateway
+      ipv4{
+        address = var.ipv4_address
+        gateway = var.gateway
+      }
     }
 
     dns {
-      servers = var.nameservers != null ? [local.nameservers] : null
+      servers = length(var.nameservers) > 0 ? var.nameservers : null
     }
   }
 
