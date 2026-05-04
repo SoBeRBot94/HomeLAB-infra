@@ -6,7 +6,7 @@ resource "proxmox_virtual_environment_container" "this" {
   start_on_boot     = var.on_boot
   started           = var.started
 
-  unprivileged = var.unprivileged
+  unprivileged      = var.unprivileged
 
   features {
     nesting = var.nesting
@@ -32,13 +32,13 @@ resource "proxmox_virtual_environment_container" "this" {
   }
 
   network_interface {
-    name   = "eth0"
-    bridge = var.network_bridge
-    firewall = var.network_firewall
+    name      = "eth0"
+    bridge    = var.network_bridge
+    firewall  = var.network_firewall
   }
 
   initialization {
-    hostname = var.name
+    hostname  = var.name
 
     ip_config {
       ipv4 {
@@ -48,7 +48,7 @@ resource "proxmox_virtual_environment_container" "this" {
     }
 
     dns {
-      servers = var.nameserver != null ? [var.nameserver] : null
+      servers = length(var.nameservers) > 0 ? var.nameservers : null
     }
 
     user_account {
@@ -65,8 +65,8 @@ resource "proxmox_virtual_environment_container" "this" {
   }
 
   console {
-    enabled = true
+    enabled   = true
     tty_count = 2 
-    type = "tty"
+    type      = "tty"
   }
 }

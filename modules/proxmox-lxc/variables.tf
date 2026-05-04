@@ -3,7 +3,7 @@ variable "node_name" {
 }
 
 variable "vm_id" {
-  type = string
+  type = number
 }
 
 variable "name" {
@@ -11,7 +11,7 @@ variable "name" {
 }
 
 variable "description" {
-  type = string
+  type    = string
   default = ""
 }
 
@@ -20,27 +20,27 @@ variable "tags" {
 }
 
 variable "unprivileged" {
-  type = bool
+  type    = bool
   default = true
 }
 
 variable "nesting" {
-  type = bool
+  type    = bool
   default = true
 }
 
 variable "on_boot" {
-  type = bool
+  type    = bool
   default = true
 }
 
 variable "started" {
-  type = bool
+  type    = bool
   default = true
 }
 
 variable "os_type" {
-  type = string
+  type    = string
   default = "fedora"
 }
 
@@ -49,22 +49,22 @@ variable "os_template_file_id" {
 }
 
 variable "cpu_cores" {
-  type = number
+  type    = number
   default = 1
 }
 
 variable "memory" {
-  type = number
+  type    = number
   default = 512
 }
 
 variable "swap" {
-  type = number
+  type    = number
   default = 512
 }
 
 variable "disk_size" {
-  type = number
+  type    = number
   default = 10
 }
 
@@ -85,17 +85,33 @@ variable "network_firewall" {
 
 variable "ipv4_address" {
   type    = string
-  default = "dhcp"
+
+  validation {
+    condition     = can(cidrhost(var.ipv4_address, 0))
+    error_message = "Must be a valid CIDR, e.g. 192.168.x.x/24"
+  }
 }
 
 variable "gateway" {
   type    = string
-  default = null
+
+  validation {
+    condition     = can(regex("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$", var.gateway))
+    error_message = "Must be a valid IP address, e.g. 192.168.x.x"
+  }
 }
 
-variable "nameserver" {
-  type    = string
-  default = null
+variable "nameservers" {
+  type    = list(string)
+  default = []
+
+  validation {
+    condition     = alltrue[(
+      for ip in var.nameservers :
+      can(regex("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$", ip))
+    )]
+    error_message = "Must be a valid list of IP address, e.g. 192.168.x.x"
+  }
 }
 
 variable "ssh_keys" {
