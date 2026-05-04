@@ -6,6 +6,6 @@ variable "gateway" {
   type = string
 }
 
-variable "nameserver" {
-  type = string
+variable "nameservers" {
+  type = list(string)
 }
