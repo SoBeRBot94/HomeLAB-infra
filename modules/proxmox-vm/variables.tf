@@ -49,30 +49,30 @@ variable "network_bridge" {
   default = "vmbr0" 
 }
 
-variable "network_ipv4_address" {
+variable "ipv4_address" {
   type    = string
 
   validation {
-    condition     = can(cidrhost(var.network_ipv4_address, 0))
+    condition     = can(cidrhost(var.ipv4_address, 0))
     error_message = "Must be a valid CIDR, e.g. 192.168.x.x/24"
   }
 }
 
-variable "network_gateway" {
+variable "gateway" {
   type    = string
 
   validation {
-    condition     = can(regex("^\\d{1,3}.\\d{1,3}.\\d{1,3}.\\d{1,3}$", var.network_gateway))
+    condition     = can(regex("^\\d{1,3}.\\d{1,3}.\\d{1,3}.\\d{1,3}$", var.gateway))
     error_message = "Must be a valid IP address, e.g. 192.168.x.x"
   }
 }
 
-variable "dns_nameservers" {
+variable "nameservers" {
   type    = list(string)
 
   validation {
     condition     = alltrue([
-      for ip in vars.dns_nameservers :
+      for ip in vars.nameservers :
       can(regex("^\\d{1,3}.\\d{1,3}.\\d{1,3}.\\d{1,3}$", ip))
     ])
     error_message = "Must be a valid list of IP address, e.g. 192.168.x.x"

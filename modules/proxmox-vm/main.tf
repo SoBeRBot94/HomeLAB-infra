@@ -43,12 +43,12 @@ resource "proxmox_virtual_environment_vm" "this" {
 
   initialization {
     ip_config {
-      address = var.network_ipv4_address
-      gateway = var.network_gateway
+      address = var.ipv4_address
+      gateway = var.gateway
     }
 
     dns {
-      servers = var.dns_nameservers != null ? [local.dns_nameservers] : null
+      servers = var.nameservers != null ? [local.nameservers] : null
     }
   }
 
