@@ -4,5 +4,5 @@ variable "proxmox_api_token" {
 }
 
 variable "proxmox_endpoint" {
-  type = string
+  type  = string
 }
