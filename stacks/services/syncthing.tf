@@ -13,7 +13,7 @@ module "syncthing" {
   cpu_cores           = 1
   memory              = 512
   swap                = 512
-  disk_size           = 10
+  disk_size           = 25
   disk_datastore      = "local-lvm"
 
   network_bridge      = "vmbr0"
