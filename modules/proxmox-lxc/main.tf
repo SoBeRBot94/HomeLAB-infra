@@ -61,6 +61,7 @@ resource "proxmox_virtual_environment_container" "this" {
     ignore_changes = [
       operating_system[0].template_file_id,
       initialization[0].user_account,
+      disk[0].size,
     ]
   }
 
