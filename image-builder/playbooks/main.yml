@@ -1,0 +1,96 @@
+---
+- name: create golden image template
+  hosts: hypervisors
+  gather_facts: false
+  vars_files:
+    - ../vars/variables.yml
+    - ../vars/secrets.yml
+  module_defaults:
+      group/community.proxmox.proxmox:
+        api_host: "{{ ansible_host }}"
+        api_user: "{{ proxmox_api_user }}"
+        api_token_id: "{{ proxmox_api_token_id }}"
+        api_token_secret: "{{ proxmox_api_token_secret }}"
+        node: "{{ inventory_hostname }}"
+        vmid: "{{ template_vm_id }}"
+        validate_certs: false
+
+  tasks:
+    - name: install system packages
+      apt:
+        package: "{{ item }}"
+        state: latest
+      loop:
+        - libguestfs-tools
+        - python3-pip
+
+    - name: install proxmoxer
+      pip:
+        name: proxmoxer
+        state: latest
+        break_system_packages: true
+
+    - name: remove existing vm template
+      community.proxmox.proxmox_kvm:
+        state: absent
+        force: true
+      ignore_errors: true
+
+    - name: fetch cloud image
+      get_url:
+        url:  "{{ cloud_image_url }}"
+        dest: "{{ cloud_image_path }}"
+        mode: '0644'
+
+    - name: build golden image
+      command:
+        cmd: >
+          virt-customize -a {{ cloud_image_path }}
+          --run-command 'dnf copr enable -y atim/starship'
+          --install {{ packages | join(',') }}
+          --run-command 'chsh -s $(which zsh)'
+          --run-command 'systemctl enable qemu-guest-agent'
+          --run-command 'dnf clean all'
+          --truncate /etc/machine-id
+      changed_when: true
+
+    - name: create vm
+      community.proxmox.proxmox_kvm:
+        name: "{{ template_name }}"
+        ostype: l26
+        cpu: host
+        cores: "{{ template_cores }}"
+        memory: "{{ template_memory }}"
+        net:
+          net0: "virtio,bridge={{ template_bridge }}"
+        agent: "enabled=1"
+        serial:
+          serial0: socket
+        vga: serial0
+        bios: seabios
+        state: present
+
+    - name: import cloud image disk
+      command:
+        cmd: >
+          qm set {{ template_vm_id }}
+          --scsihw virtio-scsi-pci
+          --virtio0 {{ template_storage }}:0,import-from={{ cloud_image_path }},discard=on,iothread=1
+      changed_when: true
+
+    - name: add cloud-init drive
+      command:
+        cmd: >
+          qm set {{ template_vm_id }} --ide2 {{ template_storage }}:cloudinit
+      changed_when: true
+
+    - name: Set boot order
+      command:
+        cmd: >
+          qm set {{ template_vm_id }} --boot order=virtio0
+      changed_when: true
+
+    - name: Convert to template
+      community.proxmox.proxmox_kvm:
+        template: true
+        update: true
