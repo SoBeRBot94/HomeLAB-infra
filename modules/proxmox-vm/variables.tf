@@ -80,3 +80,13 @@ variable "nameservers" {
     error_message = "Must be a valid list of IP address, e.g. 192.168.x.x"
   }
 }
+
+variable "sudo_user" {
+  type    = string
+  default = "fedora"
+}
+
+variable "sudo_user_ssh_keys" {
+  type    = list(string)
+  default = []
+}
