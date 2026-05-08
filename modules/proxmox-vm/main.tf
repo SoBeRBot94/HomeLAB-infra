@@ -55,10 +55,8 @@ resource "proxmox_virtual_environment_vm" "this" {
     }
 
     user_account {
-      content {
         username  = var.sudo_user
         keys      = var.sudo_user_ssh_keys
-      }
     }
   }
 
