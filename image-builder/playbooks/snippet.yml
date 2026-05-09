@@ -12,6 +12,6 @@
 
     - name: Upload cloud-init config
       template:
-        src: "{{ playbook_dir }}/../files/cloud-init.yml.j2"
+        src: "{{ playbook_dir }}/../templates/cloud-init.yml.j2"
         dest: /var/lib/vz/snippets/cloud-init.yml
         mode: '0644'
