@@ -81,12 +81,7 @@ variable "nameservers" {
   }
 }
 
-variable "sudo_user" {
+variable "user_data_file" {
   type    = string
-  default = "fedora"
-}
-
-variable "sudo_user_ssh_keys" {
-  type    = list(string)
-  default = []
+  default = "local:snippets/cloud-init.yml"
 }

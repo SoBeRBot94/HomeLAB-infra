@@ -54,10 +54,7 @@ resource "proxmox_virtual_environment_vm" "this" {
       servers = length(var.nameservers) > 0 ? var.nameservers : null
     }
 
-    user_account {
-        username  = var.sudo_user
-        keys      = var.sudo_user_ssh_keys
-    }
+    user_data_file_id = var.user_data_file
   }
 
   serial_device {
@@ -67,7 +64,6 @@ resource "proxmox_virtual_environment_vm" "this" {
   lifecycle {
     ignore_changes = [
       disk[0].import_from,
-      initialization[0].user_account,
     ]
   }
 }
