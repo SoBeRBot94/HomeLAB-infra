@@ -5,7 +5,7 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /usr/bin/zsh
     lock_passwd: false
-    passwd: "{{ hashed_password }} "
+    passwd: "{{ hashed_password }}"
     ssh_authorized_keys:
     - "{{ ssh_pub_key }}"
 
