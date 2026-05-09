@@ -15,10 +15,12 @@ packages:
   - eza
   - fd
   - fzf
+  - neovim
   - procs
   - qemu-guest-agent
   - ripgrep
   - starship
   - wget
+  - wipe
   - zoxide
   - zsh
