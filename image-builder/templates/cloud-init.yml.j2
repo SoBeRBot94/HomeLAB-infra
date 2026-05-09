@@ -1,0 +1,38 @@
+#cloud-config
+users:
+  - name: fedora
+    groups: wheel
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /usr/bin/zsh
+    lock_passwd: false
+    passwd: "{{ hashed_password }} "
+    ssh_authorized_keys:
+    - "{{ ssh_pub_key }}"
+
+write_files:
+  - path: /root/.zshrc
+    owner: root:root
+    permissions: '0644'
+    content: |
+      eval "$(starship init zsh)"
+      eval "$(zoxide init zsh)"
+      source <(fzf --zsh)
+
+      # Aliases
+      alias ll="eza --tree --level 1 --icons=always --header --long"
+      alias vim="nvim"
+
+  - path: /home/fedora/.zshrc
+    owner: fedora:fedora
+    permissions: '0644'
+    content: |
+      eval "$(starship init zsh)"
+      eval "$(zoxide init zsh)"
+      source <(fzf --zsh)
+
+      # Aliases
+      alias ll="eza --tree --level 1 --icons=always --header --long"
+      alias vim="nvim"
+            
+runcmd:
+  - chsh -s /usr/bin/zsh fedora
