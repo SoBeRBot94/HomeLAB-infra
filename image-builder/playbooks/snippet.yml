@@ -5,6 +5,12 @@
     - ../vars/secrets.yml
 
   tasks:
+    - name: install cloud init package
+      apt:
+        name: cloud-init
+        state: latest
+      register: cloudinit_installed
+
     - name: Enable snippets on local storage
       command:
         cmd: pvesm set local --content iso,vztmpl,snippets
@@ -15,3 +21,12 @@
         src: "{{ playbook_dir }}/../templates/cloud-init.yml.j2"
         dest: /var/lib/vz/snippets/cloud-init.yml
         mode: '0644'
+      register: template_uploaded
+
+    - name: validate cloud-init config
+      command:
+        cmd: cloud-init schema --config-file /var/lib/vz/snippets/cloud-init.yml --annotate
+      when: cloudinit_installed is success and template_uploaded is success
+      changed_when: false
+      register: cloudinit_validated
+      failed_when: cloudinit_validated.rc != 0

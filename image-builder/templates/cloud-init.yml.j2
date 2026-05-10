@@ -14,7 +14,7 @@ write_files:
     owner: root:root
     permissions: '0644'
     content: |
-      {% raw %}
+{% raw %}
       eval "$(starship init zsh)"
       eval "$(zoxide init zsh)"
       source <(fzf --zsh)
@@ -22,13 +22,13 @@ write_files:
       # Aliases
       alias ll="eza --tree --level 1 --icons=always --header --long"
       alias vim="nvim"
-      {% endraw %}
+{% endraw %}
 
   - path: /home/fedora/.zshrc
     owner: fedora:fedora
     permissions: '0644'
     content: |
-      {% raw %}
+{% raw %}
       eval "$(starship init zsh)"
       eval "$(zoxide init zsh)"
       source <(fzf --zsh)
@@ -36,7 +36,7 @@ write_files:
       # Aliases
       alias ll="eza --tree --level 1 --icons=always --header --long"
       alias vim="nvim"
-      {% endraw %}
-
+{% endraw %}
+            
 runcmd:
   - chsh -s /usr/bin/zsh fedora
