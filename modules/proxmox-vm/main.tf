@@ -43,6 +43,8 @@ resource "proxmox_virtual_environment_vm" "this" {
   }
 
   initialization {
+    hostname = var.name
+
     ip_config {
       ipv4{
         address = var.ipv4_address
