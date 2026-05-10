@@ -7,14 +7,14 @@ users:
     lock_passwd: false
     passwd: "{{ hashed_password }}"
     ssh_authorized_keys:
-    - "{{ ssh_pub_key }}"
+      - "{{ ssh_pub_key }}"
 
 write_files:
   - path: /root/.zshrc
     owner: root:root
     permissions: '0644'
     content: |
-{% raw %}
+{%- raw %}
       eval "$(starship init zsh)"
       eval "$(zoxide init zsh)"
       source <(fzf --zsh)
@@ -22,13 +22,14 @@ write_files:
       # Aliases
       alias ll="eza --tree --level 1 --icons=always --header --long"
       alias vim="nvim"
-{% endraw %}
+{%- endraw %}
 
   - path: /home/fedora/.zshrc
     owner: fedora:fedora
     permissions: '0644'
+    defer: true
     content: |
-{% raw %}
+{%- raw %}
       eval "$(starship init zsh)"
       eval "$(zoxide init zsh)"
       source <(fzf --zsh)
@@ -36,7 +37,4 @@ write_files:
       # Aliases
       alias ll="eza --tree --level 1 --icons=always --header --long"
       alias vim="nvim"
-{% endraw %}
-            
-runcmd:
-  - chsh -s /usr/bin/zsh fedora
+{%- endraw %}
