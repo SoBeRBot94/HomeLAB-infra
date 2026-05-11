@@ -39,3 +39,6 @@ write_files:
       alias ll="eza --tree --level 1 --icons=always --header --long"
       alias vim="nvim"
 {%- endraw %}
+
+runcmd:
+  - "hostnamectl set-hostname $(cat /sys/class/dmi/id/product_name)"
