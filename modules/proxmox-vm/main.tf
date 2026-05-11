@@ -15,6 +15,10 @@ resource "proxmox_virtual_environment_vm" "this" {
     full  = local.full_clone_enabled
   }
 
+  smbios {
+    product = var.name
+  }
+
   agent {
     enabled = local.agent_enabled
   }
