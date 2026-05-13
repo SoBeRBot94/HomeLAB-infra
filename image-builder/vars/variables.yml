@@ -15,6 +15,7 @@ packages:
   - eza
   - fd
   - fzf
+  - kitty-terminfo
   - neovim
   - procs
   - qemu-guest-agent
