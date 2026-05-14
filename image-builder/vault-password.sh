@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-pass show ansible/vault-password
+pass show HomeLAB/infra/vault-password
