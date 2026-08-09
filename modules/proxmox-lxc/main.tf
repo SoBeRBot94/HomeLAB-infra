@@ -12,9 +12,9 @@ resource "proxmox_virtual_environment_container" "this" {
     nesting = var.nesting
   }
 
-  operating_system {
-    template_file_id = var.os_template_file_id
-    type             = var.os_type
+  clone {
+    vm_id = var.template_id
+    full  = true
   }
 
   cpu {
@@ -59,7 +59,6 @@ resource "proxmox_virtual_environment_container" "this" {
 
   lifecycle {
     ignore_changes = [
-      operating_system[0].template_file_id,
       initialization[0].user_account,
       disk[0].size,
     ]

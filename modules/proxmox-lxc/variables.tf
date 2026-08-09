@@ -39,13 +39,9 @@ variable "started" {
   default = true
 }
 
-variable "os_type" {
-  type    = string
-  default = "fedora"
-}
-
-variable "os_template_file_id" {
-  type = string
+variable "template_id" {
+  type    = number
+  default = 2000
 }
 
 variable "cpu_cores" {
