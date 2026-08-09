@@ -1,0 +1,79 @@
+---
+- hosts: hypervisors
+  gather_facts: false
+  vars_files:
+    - ../vars/variables.yml
+    - ../vars/secrets.yml
+  module_defaults:
+      group/community.proxmox.proxmox:
+        api_host: "{{ ansible_host }}"
+        api_user: "{{ proxmox_api_user }}"
+        api_token_id: "{{ proxmox_api_token_id }}"
+        api_token_secret: "{{ proxmox_api_token_secret }}"
+        node: "{{ inventory_hostname }}"
+        validate_certs: false
+
+  tasks:
+    - name: fetch base appliance template
+      community.proxmox.proxmox_template:
+        content_type: vztmpl
+        storage: local
+        template: "{{ ct_base_image }}"
+        state: present
+
+    - name: create build container
+      community.proxmox.proxmox:
+        vmid: "{{ ct_template_id }}"
+        hostname: "{{ ct_template_name }}"
+        ostemplate: "local:vztmpl/{{ ct_base_image }}"
+        ostype: fedora
+        disk: "{{ template_storage }}:{{ ct_template_disk }}"
+        cores: "{{ ct_template_cores }}"
+        memory: "{{ ct_template_memory }}"
+        swap: 0
+        unprivileged: false
+        netif:
+          net0: "name=eth0,bridge={{ template_bridge }},ip=dhcp"
+        state: present
+ 
+    - name: start build container
+      community.proxmox.proxmox:
+        vmid: "{{ ct_template_id }}"
+        hostname: "{{ ct_template_name }}"
+        state: started
+
+    - name: wait for build container network
+      command:
+        cmd: "pct exec {{ ct_template_id }} -- getent hosts download.fedoraproject.org"
+      register: ct_dns
+      until: ct_dns.rc == 0
+      retries: 30
+      delay: 5
+      changed_when: false
+
+    - name: build golden image
+      command:
+        cmd: >
+          pct exec {{ ct_template_id }} -- /bin/bash -c
+          "dnf install -y dnf-plugins-core &&
+           dnf copr enable -y atim/starship &&
+           dnf install -y {{ ct_template_packages | join(' ') }} &&
+           chsh -s /usr/bin/zsh root &&
+           systemctl enable sshd &&
+           dnf clean all &&
+           rm -f /etc/ssh/ssh_host_* &&
+           truncate -s 0 /etc/machine-id"
+      changed_when: true
+
+    - name: stop build container
+      community.proxmox.proxmox:
+        vmid: "{{ ct_template_id }}"
+        hostname: "{{ ct_template_name }}"
+        state: stopped
+        force: true
+
+    - name: convert build container to template
+      community.proxmox.proxmox:
+        vmid: "{{ ct_template_id }}"
+        hostname: "{{ ct_template_name }}"
+        state: template
