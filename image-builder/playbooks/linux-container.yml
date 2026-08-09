@@ -72,6 +72,35 @@
            truncate -s 0 /etc/machine-id"
       changed_when: true
 
+    - name: read hypervisor authorized_keys
+      slurp:
+        src: /root/.ssh/authorized_keys
+      register: pve_authorized_keys
+
+    - name: select the labinfra public key
+      set_fact:
+        labinfra_pubkey: "{{ (pve_authorized_keys.content | b64decode).splitlines()
+                             | select('search', ct_ssh_key_match) | first }}"
+
+    - name: stage labinfra key on the hypervisor
+      copy:
+        content: "{{ labinfra_pubkey }}\n"
+        dest: /tmp/authorized_keys.golden
+        mode: '0600'
+
+    - name: ensure root ssh directory exists in build container
+      command:
+        cmd: "pct exec {{ ct_template_id }} -- install -d -m 0700 /root/.ssh"
+      changed_when: true
+
+    - name: install ssh public key into build container
+      command:
+        cmd: >
+          pct push {{ ct_template_id }}
+          /tmp/authorized_keys.golden /root/.ssh/authorized_keys
+          --perms 0600 --user 0 --group 0
+      changed_when: true
+
     - name: stop build container
       community.proxmox.proxmox:
         vmid: "{{ ct_template_id }}"
