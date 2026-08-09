@@ -1,14 +1,13 @@
-template_vm_id: 1000 
-template_name: "fedora-44-golden"
+vm_template_id: 1000 
+vm_template_name: "fedora-44-golden-vm"
+vm_template_cores: 2
+vm_template_memory: 2048
+vm_base_image: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2"
+vm_base_image_filename: "Fedora-Cloud-Base-44.qcow2"
+vm_base_image_path: "/tmp/{{ vm_base_image_filename }}"
+
 template_storage: "local-lvm"
-template_cores: 2
-template_memory: 2048
 template_bridge: "vmbr0"
-
-cloud_image_url: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2"
-cloud_image_filename: "Fedora-Cloud-Base-44.qcow2"
-cloud_image_path: "/tmp/{{ cloud_image_filename }}"
-
 packages:
   - bat
   - curl

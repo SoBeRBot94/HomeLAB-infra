@@ -3,6 +3,6 @@
   import_playbook: snippet.yml
   tags: cloud-init
 
-- name: create golden image template
-  import_playbook: template.yml
-  tags: golden-image
+- name: create vm golden image template
+  import_playbook: virtual-machine.yml
+  tags: vm-golden-image
