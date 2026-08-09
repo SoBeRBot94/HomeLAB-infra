@@ -5,6 +5,9 @@
 .terraform/
 .terraform.lock.hcl
 
+# Ansible
+image-builder/tmp
+
 # Secrets
 *.secret.tfvars
 *.secrets.tfvars

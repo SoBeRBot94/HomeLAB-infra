@@ -11,7 +11,7 @@
         api_token_id: "{{ proxmox_api_token_id }}"
         api_token_secret: "{{ proxmox_api_token_secret }}"
         node: "{{ inventory_hostname }}"
-        vmid: "{{ template_vm_id }}"
+        vmid: "{{ vm_template_id }}"
         validate_certs: false
 
   tasks:
@@ -37,14 +37,14 @@
 
     - name: fetch cloud image
       get_url:
-        url:  "{{ cloud_image_url }}"
-        dest: "{{ cloud_image_path }}"
+        url:  "{{ vm_base_image }}"
+        dest: "{{ vm_base_image_path }}"
         mode: '0644'
 
     - name: build golden image
       command:
         cmd: >
-          virt-customize -a {{ cloud_image_path }}
+          virt-customize -a {{ vm_base_image_path }}
           --run-command 'dnf copr enable -y atim/starship'
           --install {{ packages | join(',') }}
           --run-command 'chsh -s /usr/bin/zsh'
@@ -55,11 +55,11 @@
 
     - name: create vm
       community.proxmox.proxmox_kvm:
-        name: "{{ template_name }}"
+        name: "{{ vm_template_name }}"
         ostype: l26
         cpu: host
-        cores: "{{ template_cores }}"
-        memory: "{{ template_memory }}"
+        cores: "{{ vm_template_cores }}"
+        memory: "{{ vm_template_memory }}"
         net:
           net0: "virtio,bridge={{ template_bridge }}"
         agent: "enabled=1"
@@ -72,21 +72,21 @@
     - name: import cloud image disk
       command:
         cmd: >
-          qm set {{ template_vm_id }}
+          qm set {{ vm_template_id }}
           --scsihw virtio-scsi-pci
-          --virtio0 {{ template_storage }}:0,import-from={{ cloud_image_path }},discard=on,iothread=1
+          --virtio0 {{ template_storage }}:0,import-from={{ vm_base_image_path }},discard=on,iothread=1
       changed_when: true
 
     - name: add cloud-init drive
       command:
         cmd: >
-          qm set {{ template_vm_id }} --ide2 {{ template_storage }}:cloudinit
+          qm set {{ vm_template_id }} --ide2 {{ template_storage }}:cloudinit
       changed_when: true
 
     - name: Set boot order
       command:
         cmd: >
-          qm set {{ template_vm_id }} --boot order=virtio0
+          qm set {{ vm_template_id }} --boot order=virtio0
       changed_when: true
 
     - name: Convert to template
