@@ -1,0 +1,6 @@
+eval "$(starship init zsh)"
+eval "$(zoxide init zsh)"
+source <(fzf --zsh)
+
+alias ll="eza --tree --level 1 --icons=always --header --long"
+alias vim="nvim"

@@ -74,6 +74,20 @@
            truncate -s 0 /etc/machine-id"
       changed_when: true
 
+    - name: stage zsh config on the hypervisor
+      copy:
+        src: "{{ playbook_dir }}/../files/zshrc"
+        dest: /tmp/zshrc.golden
+        mode: '0644'
+
+    - name: install zsh config into build container
+      command:
+        cmd: >
+          pct push {{ ct_template_id }}
+          /tmp/zshrc.golden /root/.zshrc
+          --perms 0644 --user 0 --group 0
+      changed_when: true
+
     - name: read hypervisor authorized_keys
       slurp:
         src: /root/.ssh/authorized_keys
