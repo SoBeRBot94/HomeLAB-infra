@@ -38,6 +38,8 @@
         cores: "{{ ct_template_cores }}"
         memory: "{{ ct_template_memory }}"
         swap: 0
+        features:
+          - nesting=1
         unprivileged: true
         netif:
           net0: "name=eth0,bridge={{ template_bridge }},ip=dhcp"
