@@ -46,6 +46,7 @@
         cmd: >
           virt-customize -a {{ vm_base_image_path }}
           --run-command 'dnf copr enable -y atim/starship'
+          --run-command 'dnf update -y'
           --install {{ packages | join(',') }}
           --run-command 'chsh -s /usr/bin/zsh'
           --run-command 'systemctl enable qemu-guest-agent'
