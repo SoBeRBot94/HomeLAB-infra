@@ -8,8 +8,11 @@ resource "proxmox_virtual_environment_container" "this" {
 
   unprivileged      = var.unprivileged
 
-  features {
-    nesting = var.nesting
+  dynamic "features" {
+    for_each = var.nesting != null ? [1] : []
+    content {
+      nesting = var.nesting
+    }
   }
 
   clone {
