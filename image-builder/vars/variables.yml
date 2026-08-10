@@ -13,7 +13,7 @@ ct_template_memory: 1024
 ct_template_disk: 8
 ct_base_image: "fedora-44-default_20260713_amd64.tar.xz"
 ct_template_path: "/var/lib/vz/template/cache/{{ ct_template_name }}.tar.zst"
-ct_template_packages: "{{ (packages | reject('equalto', 'qemu-guest-agent') | list) + ['openssh-server'] }}"
+ct_template_packages: "{{ (packages | reject('equalto', 'qemu-guest-agent') | list) + ['openssh-server', 'ncurses'] }}"
 ct_ssh_key_match: "infrastructre"
 
 template_storage: "local-lvm"
