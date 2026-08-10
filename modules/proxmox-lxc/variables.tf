@@ -26,7 +26,7 @@ variable "unprivileged" {
 
 variable "nesting" {
   type    = bool
-  default = true
+  default = null
 }
 
 variable "on_boot" {
