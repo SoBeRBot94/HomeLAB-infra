@@ -93,7 +93,7 @@
           --perms 0644 --user 0 --group 0
       loop:
         - { src: zshrc.golden, dest: .zshrc }
-        - { src: startship.toml, dest: .config/starship.toml }
+        - { src: starship.toml, dest: .config/starship.toml }
       changed_when: true
 
     - name: read hypervisor authorized_keys
