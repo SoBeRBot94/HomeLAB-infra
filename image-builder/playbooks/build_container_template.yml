@@ -1,0 +1,132 @@
+---
+- name: remove existing container template
+  community.proxmox.proxmox:
+    vmid: "{{ item.id }}"
+    state: absent
+    force: true
+    purge: true
+
+- name: create build container
+  community.proxmox.proxmox:
+    vmid: "{{ item.id }}"
+    hostname: "{{ item.name }}"
+    ostemplate: "local:vztmpl/{{ ct_base_image }}"
+    ostype: fedora
+    disk: "{{ template_storage }}:{{ ct_template_disk }}"
+    cores: "{{ ct_template_cores }}"
+    memory: "{{ ct_template_memory }}"
+    swap: 0
+    features:
+      - nesting=1
+    unprivileged: "{{ item.unprivileged }}" 
+    netif:
+      net0: "name=eth0,bridge={{ template_bridge }},ip=dhcp"
+    state: present
+  module_defaults:
+    community.proxmox.proxmox:
+      api_host: "{{ ansible_host }}"
+      api_user: "root@pam"
+      api_password: "{{ proxmox_root_password }}"
+      node: "{{ inventory_hostname }}"
+      validate_certs: false
+
+- name: start build container
+  community.proxmox.proxmox:
+    vmid: "{{ item.id }}"
+    hostname: "{{ item.name }}"
+    state: started
+
+- name: wait for build container network
+  command:
+    cmd: "pct exec {{ item.id }} -- getent hosts download.fedoraproject.org"
+  register: ct_dns
+  until: ct_dns.rc == 0
+  retries: 30
+  delay: 5
+  changed_when: false
+
+- name: build golden image
+  command:
+    cmd: >
+      pct exec {{ item.id }} -- /bin/bash -c
+      "dnf install -y dnf-plugins-core &&
+       dnf update -y &&
+       dnf copr enable -y atim/starship &&
+       dnf install -y {{ ct_template_packages | join(' ') }} &&
+       chsh -s /usr/bin/zsh root &&
+       systemctl enable sshd &&
+       dnf clean all &&
+       mkdir -p /root/.config &&
+       rm -f /etc/ssh/ssh_host_* &&
+       truncate -s 0 /etc/machine-id"
+  changed_when: true
+
+- name: stage zsh and starship config on the hypervisor
+  copy:
+    src: "{{ playbook_dir }}/../files/{{ config_item.src }}"
+    dest: /tmp/{{ config_item.dest }}
+    mode: '0644'
+  loop:
+    - { src: zshrc, dest: zshrc.golden }
+    - { src: starship.toml, dest: starship.toml }
+  loop_control:
+    loop_var: config_item
+
+- name: install zsh and starship config into build container
+  command:
+    cmd: >
+      pct push {{ item.id }}
+      /tmp/{{ config_item.src }} /root/{{ config_item.dest }}
+      --perms 0644 --user 0 --group 0
+  loop:
+    - { src: zshrc.golden, dest: .zshrc }
+    - { src: starship.toml, dest: .config/starship.toml }
+  changed_when: true
+  loop_control:
+    loop_var: config_item
+
+- name: read hypervisor authorized_keys
+  slurp:
+    src: /root/.ssh/authorized_keys
+  register: pve_authorized_keys
+
+- name: select the labinfra public key
+  set_fact:
+    labinfra_pubkey: "{{ (pve_authorized_keys.content | b64decode).splitlines()
+                         | select('search', ct_ssh_key_match) | first }}"
+
+- name: stage labinfra key on the hypervisor
+  copy:
+    content: "{{ labinfra_pubkey }}\n"
+    dest: /tmp/authorized_keys.golden
+    mode: '0600'
+
+- name: ensure root ssh directory exists in build container
+  command:
+    cmd: "pct exec {{ item.id }} -- install -d -m 0700 /root/.ssh"
+  register: ssh_dir_result
+  until: ssh_dir_result.rc == 0
+  retries: 3
+  delay: 5
+  changed_when: true
+
+- name: install ssh public key into build container
+  command:
+    cmd: >
+      pct push {{ item.id }}
+      /tmp/authorized_keys.golden /root/.ssh/authorized_keys
+      --perms 0600 --user 0 --group 0
+  changed_when: true
+
+- name: stop build container
+  community.proxmox.proxmox:
+    vmid: "{{ item.id }}"
+    hostname: "{{ item.name }}"
+    state: stopped
+    force: true
+
+- name: convert build container to template
+  community.proxmox.proxmox:
+    vmid: "{{ item.id }}"
+    hostname: "{{ item.name }}"
+    state: template

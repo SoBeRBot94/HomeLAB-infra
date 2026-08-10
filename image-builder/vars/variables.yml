@@ -8,6 +8,18 @@ vm_base_image_path: "/tmp/{{ vm_base_image_filename }}"
 
 ct_template_id: 2000
 ct_template_name: "fedora-44-golden-lxc"
+
+ct_template_privileged_id: 3000
+ct_template_privileged_name: "fedora-44-golden-lxc-privileged"
+
+ct_template_builds:
+  - id: "{{ ct_template_id }}"
+    name: "{{ ct_template_name }}"
+    unprivileged: true
+  - id: "{{ ct_template_privileged_id }}"
+    name: "{{ ct_template_privileged_name }}"
+    unprivileged: false
+
 ct_template_cores: 2
 ct_template_memory: 1024
 ct_template_disk: 8
