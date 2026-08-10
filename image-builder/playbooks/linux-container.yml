@@ -65,27 +65,35 @@
         cmd: >
           pct exec {{ ct_template_id }} -- /bin/bash -c
           "dnf install -y dnf-plugins-core &&
+           dnf update -y &&
            dnf copr enable -y atim/starship &&
            dnf install -y {{ ct_template_packages | join(' ') }} &&
            chsh -s /usr/bin/zsh root &&
            systemctl enable sshd &&
            dnf clean all &&
+           mkdir -p /root/.config &&
            rm -f /etc/ssh/ssh_host_* &&
            truncate -s 0 /etc/machine-id"
       changed_when: true
 
-    - name: stage zsh config on the hypervisor
+    - name: stage zsh and starship config on the hypervisor
       copy:
-        src: "{{ playbook_dir }}/../files/zshrc"
-        dest: /tmp/zshrc.golden
+        src: "{{ playbook_dir }}/../files/{{ item.src }}"
+        dest: /tmp/{{ item.dest }}
         mode: '0644'
+      loop:
+        - { src: zshrc, dest: zshrc.golden }
+        - { src: starship.toml, dest: starship.toml }
 
-    - name: install zsh config into build container
+    - name: install zsh and starship config into build container
       command:
         cmd: >
           pct push {{ ct_template_id }}
-          /tmp/zshrc.golden /root/.zshrc
+          /tmp/{{ item.src }} /root/{{ item.dest }}
           --perms 0644 --user 0 --group 0
+      loop:
+        - { src: zshrc.golden, dest: .zshrc }
+        - { src: startship.toml, dest: .config/starship.toml }
       changed_when: true
 
     - name: read hypervisor authorized_keys
