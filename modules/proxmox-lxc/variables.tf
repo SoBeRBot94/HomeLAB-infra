@@ -120,14 +120,3 @@ variable "root_password" {
   sensitive = true
   default   = null
 }
-
-variable "device_passthrough" {
-  type = list(object({
-    path       = string
-    mode       = optional(string)
-    uid        = optional(number)
-    gid        = optional(number)
-    deny_write = optional(bool)
-  }))
-  default = []
-}

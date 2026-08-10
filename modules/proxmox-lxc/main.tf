@@ -69,16 +69,4 @@ resource "proxmox_virtual_environment_container" "this" {
     tty_count = 2 
     type      = "tty"
   }
-
-  dynamic "device_passthrough" {
-    for_each = var.device_passthrough
-    content {
-      path       = device_passthrough.value.path
-      mode       = try(device_passthrough.value.mode, null)
-      uid        = try(device_passthrough.value.uid, null)
-      gid        = try(device_passthrough.value.gid, null)
-      deny_write = try(device_passthrough.value.deny_write, null)
-    }
-  }
-
 }
