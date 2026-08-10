@@ -14,13 +14,6 @@
         validate_certs: false
 
   tasks:
-    - name: remove existing container template
-      community.proxmox.proxmox:
-        vmid: "{{ ct_template_id }}"
-        state: absent
-        force: true
-        purge: true
-
     - name: fetch base appliance template
       community.proxmox.proxmox_template:
         content_type: vztmpl
@@ -28,112 +21,8 @@
         template: "{{ ct_base_image }}"
         state: present
 
-    - name: create build container
-      community.proxmox.proxmox:
-        vmid: "{{ ct_template_id }}"
-        hostname: "{{ ct_template_name }}"
-        ostemplate: "local:vztmpl/{{ ct_base_image }}"
-        ostype: fedora
-        disk: "{{ template_storage }}:{{ ct_template_disk }}"
-        cores: "{{ ct_template_cores }}"
-        memory: "{{ ct_template_memory }}"
-        swap: 0
-        features:
-          - nesting=1
-        unprivileged: true
-        netif:
-          net0: "name=eth0,bridge={{ template_bridge }},ip=dhcp"
-        state: present
- 
-    - name: start build container
-      community.proxmox.proxmox:
-        vmid: "{{ ct_template_id }}"
-        hostname: "{{ ct_template_name }}"
-        state: started
-
-    - name: wait for build container network
-      command:
-        cmd: "pct exec {{ ct_template_id }} -- getent hosts download.fedoraproject.org"
-      register: ct_dns
-      until: ct_dns.rc == 0
-      retries: 30
-      delay: 5
-      changed_when: false
-
-    - name: build golden image
-      command:
-        cmd: >
-          pct exec {{ ct_template_id }} -- /bin/bash -c
-          "dnf install -y dnf-plugins-core &&
-           dnf update -y &&
-           dnf copr enable -y atim/starship &&
-           dnf install -y {{ ct_template_packages | join(' ') }} &&
-           chsh -s /usr/bin/zsh root &&
-           systemctl enable sshd &&
-           dnf clean all &&
-           mkdir -p /root/.config &&
-           rm -f /etc/ssh/ssh_host_* &&
-           truncate -s 0 /etc/machine-id"
-      changed_when: true
-
-    - name: stage zsh and starship config on the hypervisor
-      copy:
-        src: "{{ playbook_dir }}/../files/{{ item.src }}"
-        dest: /tmp/{{ item.dest }}
-        mode: '0644'
-      loop:
-        - { src: zshrc, dest: zshrc.golden }
-        - { src: starship.toml, dest: starship.toml }
-
-    - name: install zsh and starship config into build container
-      command:
-        cmd: >
-          pct push {{ ct_template_id }}
-          /tmp/{{ item.src }} /root/{{ item.dest }}
-          --perms 0644 --user 0 --group 0
-      loop:
-        - { src: zshrc.golden, dest: .zshrc }
-        - { src: starship.toml, dest: .config/starship.toml }
-      changed_when: true
-
-    - name: read hypervisor authorized_keys
-      slurp:
-        src: /root/.ssh/authorized_keys
-      register: pve_authorized_keys
-
-    - name: select the labinfra public key
-      set_fact:
-        labinfra_pubkey: "{{ (pve_authorized_keys.content | b64decode).splitlines()
-                             | select('search', ct_ssh_key_match) | first }}"
-
-    - name: stage labinfra key on the hypervisor
-      copy:
-        content: "{{ labinfra_pubkey }}\n"
-        dest: /tmp/authorized_keys.golden
-        mode: '0600'
-
-    - name: ensure root ssh directory exists in build container
-      command:
-        cmd: "pct exec {{ ct_template_id }} -- install -d -m 0700 /root/.ssh"
-      changed_when: true
-
-    - name: install ssh public key into build container
-      command:
-        cmd: >
-          pct push {{ ct_template_id }}
-          /tmp/authorized_keys.golden /root/.ssh/authorized_keys
-          --perms 0600 --user 0 --group 0
-      changed_when: true
-
-    - name: stop build container
-      community.proxmox.proxmox:
-        vmid: "{{ ct_template_id }}"
-        hostname: "{{ ct_template_name }}"
-        state: stopped
-        force: true
-
-    - name: convert build container to template
-      community.proxmox.proxmox:
-        vmid: "{{ ct_template_id }}"
-        hostname: "{{ ct_template_name }}"
-        state: template
+    - name: build container template
+      include_tasks: build_container_template.yml
+      loop: "{{ ct_template_builds }}"
+      loop_control:
+        label: "{{ item.name }}"
