@@ -34,6 +34,18 @@ resource "proxmox_virtual_environment_container" "this" {
     size         = var.disk_size
   }
 
+  dynamic "mount_point" {
+    for_each = var.mount_points
+    content {
+      volume        = mount_point.value.volume
+      path          = mount_point.value.path
+      size          = mount_point.value.size
+      backup        = mount_point.value.backup
+      read_only     = mount_point.value.read_only
+      mount_options = mount_point.value.mount_options
+    }
+  }
+
   network_interface {
     name      = "eth0"
     bridge    = var.network_bridge

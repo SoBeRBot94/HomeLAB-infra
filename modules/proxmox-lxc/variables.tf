@@ -69,6 +69,18 @@ variable "disk_datastore" {
   default = "local-lvm"
 }
 
+variable "mount_points" {
+  type    = list(object({
+    volume        = string
+    path          = string
+    size          = optional(string)
+    backup        = optional(bool)
+    read_only     = optional(bool)
+    mount_options = optional(list(string))
+  }))
+  default = []
+}
+
 variable "network_bridge" {
   type    = string
   default = "vmbr0"
