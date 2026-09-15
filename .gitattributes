@@ -1,0 +1,3 @@
+# Force YAML to show up in github's language bar
+*.yml  linguist-detectable
+*.yaml linguist-detectable
