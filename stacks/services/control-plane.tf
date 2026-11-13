@@ -13,5 +13,5 @@ module "control-plane" {
 
   ipv4_address        = var.service_ips.control-plane
   gateway             = var.gateway
-  nameservers         = var.nameservers
+  nameservers         = ["192.168.88.2"]
 }
