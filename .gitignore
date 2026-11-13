@@ -17,3 +17,6 @@ secrets.auto.tfvars
 
 # macos
 .DS_Store
+
+# Talos
+stacks/services/_out/
