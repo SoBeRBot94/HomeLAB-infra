@@ -9,3 +9,7 @@ variable "gateway" {
 variable "nameservers" {
   type = list(string)
 }
+
+variable "talos_ips" {
+  type = map(string)
+}
