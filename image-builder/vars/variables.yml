@@ -46,3 +46,30 @@ packages:
   - wipe
   - zoxide
   - zsh
+
+talos_template_id: 1100
+talos_template_name: "talos-{{ talos_version | regex_replace('^v', '') }}-golden-vm"
+talos_version: "v1.14.6"
+talos_platform: "nocloud"
+talos_factory_host: "factory.talos.dev"
+talos_schematic_url: "https://{{ talos_factory_host }}/schematics"
+talos_image_url: "https://{{ talos_factory_host }}/image/{{ schematic.json.id }}/{{ talos_version }}/{{ talos_platform }}-amd64.raw.xz"
+talos_installer_image: "{{ talos_factory_host }}/{{ talos_platform }}-installer/{{ schematic.json.id }}:{{ talos_version }}"
+talos_schematic:
+  customization:
+    systemExtensions:
+      officialExtensions:
+        - siderolabs/qemu-guest-agent
+talos_image_path: "/tmp/talos-{{ talos_version }}-{{ talos_platform }}-amd64.raw"
+
+vm_template_builds:
+  - id: "{{ vm_template_id }}"
+    name: "{{ vm_template_name }}"
+    os: fedora
+    image_path: "{{ vm_base_image_path }}"
+  - id: "{{ talos_template_id }}"
+    name: "{{ talos_template_name }}"
+    os: talos
+    image_path: "{{ talos_image_path }}"
+
+vm_template_select: [fedora, talos]
