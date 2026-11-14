@@ -1,0 +1,99 @@
+---
+- name: remove existing vm template
+  community.proxmox.proxmox_kvm:
+    vmid: "{{ item.id }}"
+    state: absent
+    force: true
+  ignore_errors: true
+
+- name: build fedora golden image
+  when: item.os == 'fedora'
+  block:
+    - name: fetch cloud image
+      get_url:
+        url:  "{{ vm_base_image }}"
+        dest: "{{ item.image_path }}"
+        mode: '0644'
+
+    - name: customize cloud image
+      command:
+        cmd: >
+          virt-customize -a {{ item.image_path }}
+          --run-command 'dnf copr enable -y atim/starship'
+          --run-command 'dnf update -y'
+          --install {{ packages | join(',') }}
+          --run-command 'chsh -s /usr/bin/zsh'
+          --run-command 'systemctl enable qemu-guest-agent'
+          --run-command 'dnf clean all'
+          --truncate /etc/machine-id
+      changed_when: true
+
+- name: build talos golden image
+  when: item.os == 'talos'
+  block:
+    - name: register image factory schematic
+      uri:
+        url: "{{ talos_schematic_url }}"
+        method: POST
+        body: "{{ talos_schematic | to_yaml }}"
+        status_code: [200, 201]
+      register: schematic
+
+    - name: show installer image
+      debug:
+        msg: "installer image: {{ talos_installer_image }}"
+
+    - name: fetch talos image
+      get_url:
+        url: "{{ talos_image_url }}"
+        dest: "{{ item.image_path }}.xz"
+        mode: '0644'
+
+    - name: decompress talos image
+      command:
+        cmd: xz -dkf {{ item.image_path }}.xz
+        creates: "{{ item.image_path }}"
+
+- name: create vm
+  community.proxmox.proxmox_kvm:
+    vmid: "{{ item.id }}"
+    name: "{{ item.name }}"
+    description: "{{ ('Talos ' ~ talos_version ~ ', schematic ' ~ schematic.json.id) if item.os == 'talos' else omit }}"
+    ostype: l26
+    cpu: host
+    cores: "{{ vm_template_cores }}"
+    memory: "{{ vm_template_memory }}"
+    net:
+      net0: "virtio,bridge={{ template_bridge }}"
+    agent: "enabled=1"
+    serial:
+      serial0: socket
+    vga: serial0
+    bios: seabios
+    state: present
+
+- name: import disk image
+  command:
+    cmd: >
+      qm set {{ item.id }}
+      --scsihw virtio-scsi-pci
+      --virtio0 {{ template_storage }}:0,import-from={{ item.image_path }},discard=on,iothread=1
+  changed_when: true
+
+- name: add cloud-init drive
+  command:
+    cmd: >
+      qm set {{ item.id }} --ide2 {{ template_storage }}:cloudinit
+  changed_when: true
+
+- name: Set boot order
+  command:
+    cmd: >
+      qm set {{ item.id }} --boot order=virtio0
+  changed_when: true
+
+- name: Convert to template
+  community.proxmox.proxmox_kvm:
+    vmid: "{{ item.id }}"
+    template: true
+    update: true
