@@ -29,6 +29,8 @@ ct_template_packages: "{{ (packages | reject('equalto', 'qemu-guest-agent') | li
 ct_ssh_key_match: "infrastructre"
 
 template_storage: "local-lvm"
+libguestfs_nopasst_dir: "/usr/local/lib/libguestfs-nopasst"
+download_timeout: 60
 template_bridge: "vmbr0"
 packages:
   - bat
@@ -62,6 +64,13 @@ talos_schematic:
         - siderolabs/qemu-guest-agent
 talos_image_path: "/tmp/talos-{{ talos_version }}-{{ talos_platform }}-amd64.raw"
 
+opnsense_template_id: 1200
+opnsense_template_name: "opnsense-{{ opnsense_version }}-golden-vm"
+opnsense_version: "26.7"
+opnsense_image_filename: "OPNsense-{{ opnsense_version }}-ufs-serial-vm-amd64.qcow2"
+opnsense_image_url: "https://github.com/maurice-w/opnsense-vm-images/releases/download/{{ opnsense_version }}/{{ opnsense_image_filename }}.bz2"
+opnsense_image_path: "/tmp/{{ opnsense_image_filename }}"
+
 vm_template_builds:
   - id: "{{ vm_template_id }}"
     name: "{{ vm_template_name }}"
@@ -71,5 +80,9 @@ vm_template_builds:
     name: "{{ talos_template_name }}"
     os: talos
     image_path: "{{ talos_image_path }}"
+  - id: "{{ opnsense_template_id }}"
+    name: "{{ opnsense_template_name }}"
+    os: opnsense
+    image_path: "{{ opnsense_image_path }}"
 
-vm_template_select: [fedora, talos]
+vm_template_select: [fedora, talos, opnsense]
