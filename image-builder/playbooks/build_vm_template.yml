@@ -14,8 +14,29 @@
         url:  "{{ vm_base_image }}"
         dest: "{{ item.image_path }}"
         mode: '0644'
+        timeout: "{{ download_timeout }}"
+      register: download
+      until: download is succeeded
+      retries: 3
+      delay: 10
+
+    # passt networking is broken with pve-qemu-kvm 11.1 (no DHCP reply in the libguestfs appliance);
+    # a failing passt stub makes libguestfs fall back to QEMU's built-in SLIRP network
+    - name: create passt stub directory
+      file:
+        path: "{{ libguestfs_nopasst_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: create passt stub for libguestfs
+      copy:
+        dest: "{{ libguestfs_nopasst_dir }}/passt"
+        content: "#!/bin/sh\nexit 127\n"
+        mode: '0755'
 
     - name: customize cloud image
+      environment:
+        PATH: "{{ libguestfs_nopasst_dir }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       command:
         cmd: >
           virt-customize -a {{ item.image_path }}
@@ -48,24 +69,48 @@
         url: "{{ talos_image_url }}"
         dest: "{{ item.image_path }}.xz"
         mode: '0644'
+        timeout: "{{ download_timeout }}"
+      register: download
+      until: download is succeeded
+      retries: 3
+      delay: 10
 
     - name: decompress talos image
       command:
         cmd: xz -dkf {{ item.image_path }}.xz
         creates: "{{ item.image_path }}"
 
+- name: build opnsense golden image
+  when: item.os == 'opnsense'
+  block:
+    - name: fetch opnsense image
+      get_url:
+        url: "{{ opnsense_image_url }}"
+        dest: "{{ item.image_path }}.bz2"
+        mode: '0644'
+        timeout: "{{ download_timeout }}"
+      register: download
+      until: download is succeeded
+      retries: 3
+      delay: 10
+
+    - name: decompress opnsense image
+      command:
+        cmd: bunzip2 -kf {{ item.image_path }}.bz2
+        creates: "{{ item.image_path }}"
+
 - name: create vm
   community.proxmox.proxmox_kvm:
     vmid: "{{ item.id }}"
     name: "{{ item.name }}"
-    description: "{{ ('Talos ' ~ talos_version ~ ', schematic ' ~ schematic.json.id) if item.os == 'talos' else omit }}"
+    description: "{{ ('Talos ' ~ talos_version ~ ', schematic ' ~ schematic.json.id) if item.os == 'talos' else (item.description | default(omit)) }}"
     ostype: l26
     cpu: host
     cores: "{{ vm_template_cores }}"
     memory: "{{ vm_template_memory }}"
     net:
       net0: "virtio,bridge={{ template_bridge }}"
-    agent: "enabled=1"
+    agent: "{{ 'enabled=0' if item.os == 'opnsense' else 'enabled=1' }}"
     serial:
       serial0: socket
     vga: serial0
@@ -81,6 +126,7 @@
   changed_when: true
 
 - name: add cloud-init drive
+  when: item.os != 'opnsense'
   command:
     cmd: >
       qm set {{ item.id }} --ide2 {{ template_storage }}:cloudinit
