@@ -56,6 +56,6 @@ resource "proxmox_virtual_environment_vm" "opnsense" {
   }
 
   agent {
-    enabled           = false
+    enabled           = true
   }
 }
