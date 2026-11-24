@@ -5,7 +5,7 @@ locals {
     "talos-cp-01" = {
       vm_id     = 1101
       role      = "controlplane"
-      tags      = ["plane-control", "service-talos", "tier-lab"]
+      tags      = ["plane-control", "service-thesis", "tier-temp"]
       cpu_cores = 2
       memory    = 4096
       disk_size = 20
@@ -13,7 +13,7 @@ locals {
     "talos-worker-01" = {
       vm_id     = 1111
       role      = "worker"
-      tags      = ["plane-worker", "service-talos", "tier-lab"]
+      tags      = ["plane-worker", "service-thesis", "tier-temp"]
       cpu_cores = 2
       memory    = 4096
       disk_size = 50
@@ -21,7 +21,7 @@ locals {
     "talos-worker-02" = {
       vm_id     = 1112
       role      = "worker"
-      tags      = ["plane-worker", "service-talos", "tier-lab"]
+      tags      = ["plane-worker", "service-thesis", "tier-temp"]
       cpu_cores = 2
       memory    = 4096
       disk_size = 50
@@ -37,7 +37,7 @@ module "talos" {
   node_name           = "pve1"
   vm_id               = each.value.vm_id
   template_id         = local.talos_template_id
-  description         = "Talos ${each.value.role} node"
+  description         = "Draugr Talos ${each.value.role} node"
   tags                = each.value.tags
 
   cpu_cores           = each.value.cpu_cores
