@@ -20,8 +20,6 @@
       retries: 3
       delay: 10
 
-    # passt networking is broken with pve-qemu-kvm 11.1 (no DHCP reply in the libguestfs appliance);
-    # a failing passt stub makes libguestfs fall back to QEMU's built-in SLIRP network
     - name: create passt stub directory
       file:
         path: "{{ libguestfs_nopasst_dir }}"
@@ -47,6 +45,9 @@
           --run-command 'systemctl enable qemu-guest-agent'
           --run-command 'dnf clean all'
           --truncate /etc/machine-id
+          --run-command 'setfiles -F -e /proc -e /sys -e /dev -e /run /etc/selinux/targeted/contexts/files/file_contexts /'
+          --delete /.autorelabel
+          --no-selinux-relabel
       changed_when: true
 
 - name: build talos golden image
