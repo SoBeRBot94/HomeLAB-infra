@@ -16,7 +16,7 @@ resource "proxmox_virtual_environment_vm" "opnsense" {
   tags                = ["plane-control", "service-thesis", "tier-temp"]
   on_boot             = true
   bios                = "seabios"
-  stop_on_destroy     = true
+  stop_on_destroy     = false
 
   clone {
     vm_id             = local.opnsense_template_id
